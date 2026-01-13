@@ -1,0 +1,403 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schema/habit-card-mvp.json",
+  "title": "Habit Card MVP Schema (method_template + content_variant)",
+  "description": "Minimal schema for LLM-extracted habit method cards and content variants. Use as a validation gate before writing into your card library.",
+  "anyOf": [
+    { "$ref": "#/$defs/Card" },
+    {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Card" },
+      "minItems": 1
+    }
+  ],
+  "$defs": {
+    "Card": {
+      "oneOf": [
+        { "$ref": "#/$defs/MethodTemplateCard" },
+        { "$ref": "#/$defs/ContentVariantCard" }
+      ]
+    },
+
+    "Id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9_\\-\\.]+$"
+    },
+
+    "Locale": {
+      "type": "string",
+      "pattern": "^[a-z]{2}_[A-Z]{2}$"
+    },
+
+    "Tag": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9_\\-\\.]+$"
+    },
+
+    "TagArray": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Tag" },
+      "uniqueItems": true,
+      "default": []
+    },
+
+    "Dose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit"],
+      "properties": {
+        "value": { "type": "number" },
+        "unit": { "type": "string", "minLength": 1, "maxLength": 16 }
+      }
+    },
+
+    "TimeHHMM": {
+      "type": "string",
+      "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+    },
+
+    "TimeWindow": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/TimeHHMM" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+
+    "Trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["if", "then"],
+      "properties": {
+        "if": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cue"],
+          "properties": {
+            "cue": { "$ref": "#/$defs/Tag" },
+            "time_window": { "$ref": "#/$defs/TimeWindow" }
+          }
+        },
+        "then": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action"],
+          "properties": {
+            "action": { "$ref": "#/$defs/Tag" }
+          }
+        }
+      }
+    },
+
+    "DosePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default", "range"],
+      "properties": {
+        "default": { "$ref": "#/$defs/Dose" },
+        "range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min", "max"],
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        },
+        "upgrade_rule": { "type": "string", "maxLength": 128 },
+        "downgrade_rule": { "type": "string", "maxLength": 128 }
+      }
+    },
+
+    "Constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "equipment_required": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Tag" },
+          "uniqueItems": true,
+          "default": []
+        },
+        "no_added_sugar": { "type": "boolean" },
+        "time_cost_max_min": { "type": "integer", "minimum": 0, "maximum": 240 },
+        "contraindications_tags": { "$ref": "#/$defs/TagArray" }
+      }
+    },
+
+    "Fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["when", "do"],
+      "properties": {
+        "when": { "$ref": "#/$defs/Tag" },
+        "do": { "$ref": "#/$defs/Tag" },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Tag" },
+          "uniqueItems": true,
+          "default": []
+        }
+      }
+    },
+
+    "MechanismTags": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "comb_targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "capability_physical",
+              "capability_psychological",
+              "opportunity_physical",
+              "opportunity_social",
+              "motivation_reflective",
+              "motivation_automatic"
+            ]
+          },
+          "uniqueItems": true,
+          "default": []
+        },
+        "barrier_tags_solved": { "$ref": "#/$defs/TagArray" }
+      }
+    },
+
+    "CandidateQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "diet_tags_all": { "$ref": "#/$defs/TagArray" },
+        "equipment_tags_all": { "$ref": "#/$defs/TagArray" },
+        "exclude_contraindication_tags_any": { "$ref": "#/$defs/TagArray" }
+      }
+    },
+
+    "ContentSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot_id", "slot_type", "select"],
+      "properties": {
+        "slot_id": { "$ref": "#/$defs/Id" },
+        "slot_type": {
+          "type": "string",
+          "enum": ["beverage_recipe", "recipe", "ingredient_option", "prompt_copy"]
+        },
+        "select": {
+          "type": "string",
+          "enum": ["top1", "top3_or_rotate", "user_choice", "rotate_daily"]
+        },
+        "candidate_query": { "$ref": "#/$defs/CandidateQuery" }
+      }
+    },
+
+    "Measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary_metric"],
+      "properties": {
+        "primary_metric": { "$ref": "#/$defs/Tag" },
+        "secondary_metrics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Tag" },
+          "uniqueItems": true,
+          "default": []
+        }
+      }
+    },
+
+    "MethodTemplateCard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "card_type",
+        "id",
+        "domain",
+        "locale",
+        "behavior_key",
+        "title",
+        "trigger",
+        "dose_policy",
+        "content_slots",
+        "measurement"
+      ],
+      "properties": {
+        "schema_version": { "type": "string", "const": "behavior_method_mvp.v1" },
+        "card_type": { "type": "string", "const": "method_template" },
+
+        "id": { "$ref": "#/$defs/Id" },
+        "domain": { "$ref": "#/$defs/Tag" },
+        "locale": { "$ref": "#/$defs/Locale" },
+
+        "behavior_key": { "$ref": "#/$defs/Tag" },
+        "title": { "type": "string", "minLength": 2, "maxLength": 120 },
+
+        "trigger": { "$ref": "#/$defs/Trigger" },
+        "dose_policy": { "$ref": "#/$defs/DosePolicy" },
+
+        "constraints": { "$ref": "#/$defs/Constraints" },
+
+        "fallbacks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Fallback" },
+          "default": []
+        },
+
+        "mechanism_tags": { "$ref": "#/$defs/MechanismTags" },
+
+        "content_slots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ContentSlot" },
+          "minItems": 0,
+          "default": []
+        },
+
+        "measurement": { "$ref": "#/$defs/Measurement" },
+
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source_url": { "type": "string", "format": "uri" },
+            "extracted_by": { "type": "string", "enum": ["human", "rule_parser", "llm", "hybrid"] },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "evidence_spans": {
+              "type": "array",
+              "items": { "type": "string", "maxLength": 256 },
+              "default": []
+            }
+          }
+        }
+      }
+    },
+
+    "Ingredient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 96 },
+        "qty": { "type": ["number", "null"] },
+        "unit": { "type": ["string", "null"], "maxLength": 16 }
+      }
+    },
+
+    "Recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["serving", "ingredients"],
+      "properties": {
+        "serving": { "$ref": "#/$defs/Dose" },
+        "ingredients": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Ingredient" },
+          "minItems": 1
+        },
+        "steps": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 256 },
+          "default": []
+        },
+        "equipment_tags": { "$ref": "#/$defs/TagArray" }
+      }
+    },
+
+    "NutritionEstimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "calories_kcal": { "type": "number", "minimum": 0 },
+        "fiber_g": { "type": "number", "minimum": 0 },
+        "sugars_g": { "type": "number", "minimum": 0 },
+        "added_sugars_g": { "type": "number", "minimum": 0 }
+      }
+    },
+
+    "ContentTags": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "diet_tags": { "$ref": "#/$defs/TagArray" },
+        "taste_tags": { "$ref": "#/$defs/TagArray" },
+        "contraindication_tags": { "$ref": "#/$defs/TagArray" }
+      }
+    },
+
+    "BindingItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method_template_id", "slot_id"],
+      "properties": {
+        "method_template_id": { "$ref": "#/$defs/Id" },
+        "slot_id": { "$ref": "#/$defs/Id" }
+      }
+    },
+
+    "Bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["usable_in"],
+      "properties": {
+        "usable_in": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/BindingItem" },
+          "minItems": 1
+        }
+      }
+    },
+
+    "ContentVariantCard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "card_type",
+        "id",
+        "domain",
+        "locale",
+        "content_type",
+        "title",
+        "recipe",
+        "bindings"
+      ],
+      "properties": {
+        "schema_version": { "type": "string", "const": "behavior_content_mvp.v1" },
+        "card_type": { "type": "string", "const": "content_variant" },
+
+        "id": { "$ref": "#/$defs/Id" },
+        "domain": { "$ref": "#/$defs/Tag" },
+        "locale": { "$ref": "#/$defs/Locale" },
+
+        "content_type": { "type": "string", "enum": ["beverage_recipe", "recipe", "ingredient_option", "prompt_copy"] },
+        "title": { "type": "string", "minLength": 2, "maxLength": 120 },
+
+        "recipe": { "$ref": "#/$defs/Recipe" },
+        "tags": { "$ref": "#/$defs/ContentTags" },
+        "nutrition_estimate": { "$ref": "#/$defs/NutritionEstimate" },
+
+        "bindings": { "$ref": "#/$defs/Bindings" },
+
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source_url": { "type": "string", "format": "uri" },
+            "extracted_by": { "type": "string", "enum": ["human", "rule_parser", "llm", "hybrid"] },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "evidence_spans": {
+              "type": "array",
+              "items": { "type": "string", "maxLength": 256 },
+              "default": []
+            }
+          }
+        }
+      }
+    }
+  }
+}

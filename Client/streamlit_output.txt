@@ -1,0 +1,44 @@
+Assumption: 用户的目标行为是假设为“养成控糖饮食的习惯”。
+
+### (4.1) 人类可读摘要：
+主要瓶颈在于心理能力（C_ps）和社会机会（O_s），可能缺乏相关知识和社交支持。建议用户每天花5分钟查阅控糖饮食的资料，增加对饮食的理解。
+
+### (4.2) 结构化 JSON：
+{
+  "goal": "养成控糖饮食的习惯",
+  "COMB": {
+    "capability": {
+      "physical":      {"status":"adequate","barriers":[],"enablers":["良好的身体健康"],"score":4},
+      "psychological": {"status":"lacking","barriers":["缺乏控糖饮食的知识"],"enablers":["对健康的重视"],"score":2}
+    },
+    "opportunity": {
+      "physical": {"status":"limited","barriers":["缺乏健康食材的可达性"],"enablers":["有超市可供选择"],"score":3},
+      "society":   {"status":"lacking","barriers":["缺乏社交支持"],"enablers":["家人支持"],"score":2}
+    },
+    "motivation": {
+      "reflective": {"status":"moderate","barriers":["缺乏明确的目标设定"],"enablers":["对健康的关注"],"score":3},
+      "automatic":  {"status":"low","barriers":["习惯性饮食偏好"],"enablers":["对甜食的渴望"],"score":1}
+    }
+  },
+  "interaction_edges_used": ["C_ps→M_r","O_s→M_r","B→M_a"],
+  "diagnosis": {
+    "primary_bottlenecks": ["C_ps","O_s"],
+    "secondary_factors": ["M_a"],
+    "rationale": "缺乏控糖饮食的知识和社交支持，导致动机不足。"
+  },
+  "plan": {
+    "first_week_actions": ["每天查阅5分钟控糖饮食资料","记录每日饮食情况"],
+    "if_then_rules": ["IF 感到想吃甜食 THEN 喝一杯水"],
+    "environment_changes": ["在家中准备健康零食","与家人讨论饮食计划"],
+    "habit_strategies": ["使用提醒工具记录饮食","设定小奖励以鼓励坚持"],
+    "review_cadence": "weekly",
+    "metrics": ["每周控糖饮食执行频次 ≥ 5次","主观满意度 ≥ 3/5"]
+  },
+  "context": {
+    "when_where": "Assumption: 在家中和工作场所",
+    "frequency_duration": "Assumption: 每天至少一次",
+    "constraints": ["时间有限","饮食选择受限"],
+    "success_metrics": ["控糖饮食执行频次","健康状况改善"],
+    "assumptions": ["用户希望改善饮食习惯以促进健康"]
+  }
+}

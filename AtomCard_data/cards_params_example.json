@@ -1,0 +1,163 @@
+[
+  {
+    "schema_version": "behavior_method_mvp.v1",
+    "card_type": "method_template",
+    "id": "mt_replace_soda_with_veg_juice_v1",
+    "domain": "metabolic_health",
+    "locale": "zh_CN",
+
+    "behavior_key": "replace_sugary_drink_with_veg_juice",
+    "title": "用无糖蔬菜汁替换含糖饮料（每天1杯）",
+
+    "trigger": {
+      "if": { "cue": "craving_sugary_drink", "time_window": ["14:00", "18:00"] },
+      "then": { "action": "drink_veg_juice" }
+    },
+
+    "dose_policy": {
+      "default": { "value": 250, "unit": "ml" },
+      "range": { "min": 150, "max": 350 },
+      "upgrade_rule": "completion_rate_7d>=0.7 -> +50ml",
+      "downgrade_rule": "completion_rate_7d<0.3 -> -50ml"
+    },
+
+    "constraints": {
+      "equipment_required": ["blender"],
+      "no_added_sugar": true,
+      "time_cost_max_min": 10,
+      "contraindications_tags": ["kidney_disease_high_potassium_risk"]
+    },
+
+    "fallbacks": [
+      {
+        "when": "no_blender",
+        "do": "choose_unsweetened_beverage",
+        "options": ["sparkling_water", "unsweetened_tea"]
+      },
+      {
+        "when": "no_time",
+        "do": "drink_ready_to_go_option",
+        "options": ["unsweetened_tea", "sparkling_water"]
+      }
+    ],
+
+    "mechanism_tags": {
+      "comb_targets": ["opportunity_physical", "motivation_automatic"],
+      "barrier_tags_solved": ["craving_sweet", "environment_temptation", "forgetting"]
+    },
+
+    "content_slots": [
+      {
+        "slot_id": "bev_recipe",
+        "slot_type": "beverage_recipe",
+        "select": "top3_or_rotate",
+        "candidate_query": {
+          "diet_tags_all": ["no_added_sugar"],
+          "equipment_tags_all": ["blender"],
+          "exclude_contraindication_tags_any": ["kidney_disease_high_potassium_risk"]
+        }
+      }
+    ],
+
+    "measurement": {
+      "primary_metric": "replacement_count_per_day",
+      "secondary_metrics": ["craving_score_1_10", "streak_days"]
+    }
+  },
+
+  {
+    "schema_version": "behavior_content_mvp.v1",
+    "card_type": "content_variant",
+    "id": "cv_veg_juice_kale_banana_tomato_v1",
+    "domain": "metabolic_health",
+    "locale": "zh_CN",
+
+    "content_type": "beverage_recipe",
+    "title": "羽衣甘蓝+香蕉+小番茄（无加糖）",
+
+    "recipe": {
+      "serving": { "value": 250, "unit": "ml" },
+      "ingredients": [
+        { "name": "羽衣甘蓝", "qty": 50, "unit": "g" },
+        { "name": "香蕉", "qty": 0.5, "unit": "piece" },
+        { "name": "小番茄", "qty": 6, "unit": "piece" },
+        { "name": "水/冰块", "qty": 150, "unit": "ml" }
+      ],
+      "steps": ["清洗食材", "全部放入搅拌机", "搅拌30-60秒即可"],
+      "equipment_tags": ["blender"]
+    },
+
+    "tags": {
+      "diet_tags": ["no_added_sugar"],
+      "taste_tags": ["fresh", "slightly_sweet"],
+      "contraindication_tags": ["kidney_disease_high_potassium_risk"]
+    },
+
+    "nutrition_estimate": {
+      "calories_kcal": 140,
+      "fiber_g": 6,
+      "sugars_g": 12,
+      "added_sugars_g": 0
+    },
+
+    "bindings": {
+      "usable_in": [
+        { "method_template_id": "mt_replace_soda_with_veg_juice_v1", "slot_id": "bev_recipe" }
+      ]
+    },
+
+    "provenance": {
+      "extracted_by": "hybrid",
+      "source": "internal_seed_or_web",
+      "confidence": 0.7
+    }
+  },
+
+  {
+    "schema_version": "behavior_content_mvp.v1",
+    "card_type": "content_variant",
+    "id": "cv_veg_juice_cucumber_celery_lemon_v1",
+    "domain": "metabolic_health",
+    "locale": "zh_CN",
+
+    "content_type": "beverage_recipe",
+    "title": "黄瓜+芹菜+柠檬（清爽低甜）",
+
+    "recipe": {
+      "serving": { "value": 250, "unit": "ml" },
+      "ingredients": [
+        { "name": "黄瓜", "qty": 0.5, "unit": "piece" },
+        { "name": "芹菜", "qty": 2, "unit": "stalk" },
+        { "name": "柠檬", "qty": 1, "unit": "slice" },
+        { "name": "水/冰块", "qty": 180, "unit": "ml" }
+      ],
+      "steps": ["清洗食材", "全部放入搅拌机", "搅拌30-60秒即可"],
+      "equipment_tags": ["blender"]
+    },
+
+    "tags": {
+      "diet_tags": ["no_added_sugar"],
+      "taste_tags": ["fresh", "sour"],
+      "contraindication_tags": []
+    },
+
+    "nutrition_estimate": {
+      "calories_kcal": 60,
+      "fiber_g": 3,
+      "sugars_g": 4,
+      "added_sugars_g": 0
+    },
+
+    "bindings": {
+      "usable_in": [
+        { "method_template_id": "mt_replace_soda_with_veg_juice_v1", "slot_id": "bev_recipe" }
+      ]
+    },
+
+    "provenance": {
+      "extracted_by": "hybrid",
+      "source": "internal_seed_or_web",
+      "confidence": 0.75
+    }
+  }
+]
