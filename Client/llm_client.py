@@ -8,7 +8,7 @@ from pathlib import Path
 # ===== 1) 基本配置 =====
 API_KEY = os.getenv("OPENAI_API_KEY")  # 按你的要求，直接写入代码
 MODEL = "gpt-4o-mini"           
-PROMPT_PATH = r"C:\AgentProject\Behaviour_Generation\behaviour_prompt\COM-B.txt"
+PROMPT_PATH = r"behaviour_prompt\COM-B.txt"
 OUT_JSON = "method_cards_output.json"
 
 # ========== 初始化 OpenAI 客户端 ==========
